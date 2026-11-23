@@ -37,7 +37,6 @@ final class AppState: ObservableObject {
     private let store: UserDefaults?
 
     private var sessions: [UUID: EditorSession] = [:]
-    private var nextUntitledNumber = 1
 
     init(store: UserDefaults? = nil) {
         self.store = store
@@ -84,9 +83,11 @@ final class AppState: ObservableObject {
 
     // MARK: Tabs
 
+    /// A new empty tab, named with the lowest Untitled number not already open, as in Notepad++.
     func createNewDocument() {
-        add(Document(untitledNumber: nextUntitledNumber))
-        nextUntitledNumber += 1
+        let used = Set(documents.values.filter { $0.fileURL == nil && $0.title == nil }.map(\.untitledNumber))
+        let number = (1...).first { !used.contains($0) }!
+        add(Document(untitledNumber: number))
     }
 
     private func add(_ document: Document) {
@@ -188,7 +189,6 @@ final class AppState: ObservableObject {
         pendingDiffs.values.forEach { $0.cancel() }
         pendingDiffs.removeAll()
         findPanelVisible = false
-        nextUntitledNumber = 1
         createNewDocument()
     }
 

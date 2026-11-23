@@ -123,3 +123,44 @@ final class SessionTests: XCTestCase {
         XCTAssertFalse(delegate.validateMenuItem(recent.items[0]))
     }
 }
+
+@MainActor
+final class UntitledNumberTests: XCTestCase {
+    private func names(_ state: AppState) -> [String] { state.documents.values.map(\.displayName) }
+
+    func testClosingTheOnlyUntitledTabDoesNotCountUp() {
+        let state = AppState()
+        for _ in 0..<12 { state.removeDocument(state.activeDocumentID!) }
+        XCTAssertEqual(names(state), ["Untitled 1"])
+    }
+
+    func testReusesTheLowestFreeNumber() throws {
+        let state = AppState()
+        state.createNewDocument()
+        state.createNewDocument()
+        XCTAssertEqual(names(state), ["Untitled 1", "Untitled 2", "Untitled 3"])
+        let second = state.documents.values.first { $0.displayName == "Untitled 2" }!.id
+        state.removeDocument(second)
+        state.createNewDocument()
+        XCTAssertEqual(state.activeDocument?.displayName, "Untitled 2")
+        state.createNewDocument()
+        XCTAssertEqual(state.activeDocument?.displayName, "Untitled 4")
+    }
+
+    func testOpeningFilesAndReadOnlyTabsDoNotUseNumbers() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("a.txt")
+        try "a".write(to: url, atomically: true, encoding: .utf8)
+
+        let state = AppState()
+        try state.open(url)                 // replaces the empty Untitled 1
+        state.openReadOnly(title: "changes", text: "", language: .diff)
+        state.createNewDocument()
+        XCTAssertEqual(state.activeDocument?.displayName, "Untitled 1")
+        state.closeAllDocuments()
+        state.createNewDocument()
+        XCTAssertEqual(names(state), ["Untitled 1", "Untitled 2"])
+    }
+}
