@@ -1,0 +1,52 @@
+# Build artifacts
+.build/
+Packages/
+*.xcodeproj/
+*.xcworkspace/
+DerivedData/
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xcuserstate
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Swift Package Manager
+.build/
+Packages/
+
+# Test
+*.xctestrun
+coverage/
+
+# Local configuration
+*.local
+*.user
+
+# Plugins
+Plugins/*.plugin/
+!Plugins/README.md
+
+# Logs
+*.log
+# Local only
+Parked/
+.swiftpm/
+*.dmg
