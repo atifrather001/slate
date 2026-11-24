@@ -63,6 +63,8 @@
 	<string>Slate needs access to your downloads to open and save files.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 NexaSecure Cloud and AI</string>
 	<key>NSNetworkVolumesUsageDescription</key>
 	<string>Slate needs access to network volumes to open and save files.</string>
 	<key>NSPrincipalClass</key>

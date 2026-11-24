@@ -209,6 +209,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     @objc func toggleSplit() { state.toggleSplit() }
     @objc func toggleMinimap() { state.toggleMinimap() }
     @objc func showChanges() { state.showChanges() }
+    @objc func showAbout() { AboutSlate.show() }
+    @objc func openRepository() { NSWorkspace.shared.open(AboutSlate.repository) }
+    @objc func openReleases() { NSWorkspace.shared.open(AboutSlate.releases) }
+    @objc func openIssues() { NSWorkspace.shared.open(AboutSlate.issues) }
     @objc func toggleTerminal() { state.toggleTerminal() }
     @objc func openTerminalHere() { state.openTerminalInFileFolder() }
     @objc func gitCommit() { gitActions.commit() }

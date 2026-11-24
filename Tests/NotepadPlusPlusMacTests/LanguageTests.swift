@@ -49,3 +49,32 @@ final class LanguageTests: XCTestCase {
         }
     }
 }
+
+@MainActor
+final class AboutTests: XCTestCase {
+    func testAboutTextAndLinks() {
+        let credits = AboutSlate.creditsText()
+        let text = credits.string
+        XCTAssertTrue(text.hasPrefix("An app by NexaSecure Cloud and AI\n"))
+        XCTAssertTrue(text.contains("Free and open source under the MIT License."))
+        XCTAssertTrue(text.contains("SwiftTerm (MIT)"))
+        XCTAssertTrue(text.contains("not affiliated with Notepad++"))
+        var links: [String] = []
+        credits.enumerateAttribute(.link, in: NSRange(location: 0, length: credits.length)) { value, _, _ in
+            if let url = value as? URL { links.append(url.absoluteString) }
+        }
+        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate"))
+        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate/releases"))
+        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate/issues"))
+        XCTAssertTrue(AboutSlate.copyright.hasSuffix("NexaSecure Cloud and AI"))
+    }
+
+    func testHelpMenu() throws {
+        let delegate = AppDelegate(store: nil)
+        let menu = MainMenu.make(target: delegate)
+        XCTAssertEqual(menu.items.last?.title, "Help")
+        XCTAssertEqual(menu.items.last?.submenu?.items.map(\.title),
+                       ["Slate on GitHub", "Check for Updates…", "Report an Issue…"])
+        XCTAssertEqual(menu.items.first?.submenu?.items.first?.action, #selector(AppDelegate.showAbout))
+    }
+}

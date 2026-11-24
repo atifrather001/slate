@@ -30,7 +30,7 @@ enum MainMenu {
         }
 
         menu("Slate", [
-            standard("About Slate", #selector(NSApplication.orderFrontStandardAboutPanel(_:))),
+            command("About Slate", #selector(AppDelegate.showAbout)),
             .separator(),
             standard("Hide Slate", #selector(NSApplication.hide(_:)), "h"),
             standard("Quit Slate", #selector(NSApplication.terminate(_:)), "q"),
@@ -152,6 +152,11 @@ enum MainMenu {
             command("Next Tab", #selector(AppDelegate.nextTab), "]", [.command, .shift]),
             .separator(),
             command("Slate", #selector(AppDelegate.showWindow), "1"),
+        ])
+        menu("Help", [
+            command("Slate on GitHub", #selector(AppDelegate.openRepository)),
+            command("Check for Updates…", #selector(AppDelegate.openReleases)),
+            command("Report an Issue…", #selector(AppDelegate.openIssues)),
         ])
         return main
     }
