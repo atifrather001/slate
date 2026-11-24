@@ -22,7 +22,7 @@ cp Resources/AppIcon.icns "$app/Contents/Resources/"
 for bundle in "$bin"/*_*.bundle(N); do
   ditto "$bundle" "$app/Contents/Resources/${bundle:t}"
 done
-for package in Highlightr swift-collections; do
+for package in Highlightr swift-collections SwiftTerm; do
   for license in .build/checkouts/$package/LICENSE*(N); do
     install -m 644 "$license" "$app/Contents/Resources/Licenses/$package-${license:t}"
   done

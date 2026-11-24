@@ -12,8 +12,17 @@ struct ContentView: View {
                 FindReplaceBar(state: state)
                 Divider()
             }
-            editors
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if state.showsTerminal {
+                VSplitView {
+                    editors
+                        .frame(maxWidth: .infinity, minHeight: 120, maxHeight: .infinity)
+                    TerminalPanel(state: state)
+                        .frame(minHeight: 80, idealHeight: 220)
+                }
+            } else {
+                editors
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
             Divider()
             StatusBar(state: state)
         }

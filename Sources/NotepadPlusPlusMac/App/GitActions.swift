@@ -228,6 +228,7 @@ struct CommitView: View {
         }
         .padding(16)
         .frame(minWidth: 480, minHeight: 400)
+        .background(Color(nsColor: .windowBackgroundColor))
     }
 
     private func done(push: Bool) {

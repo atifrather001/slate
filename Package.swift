@@ -21,6 +21,8 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections", from: "1.0.0"),
         // Highlightr for syntax highlighting (pure Swift)
         .package(url: "https://github.com/raspu/Highlightr", from: "2.1.0"),
+        // SwiftTerm for the terminal panel (MIT)
+        .package(url: "https://github.com/migueldeicaza/SwiftTerm", from: "1.99.0"),
     ],
     targets: [
         .executableTarget(
@@ -29,6 +31,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "Highlightr", package: "Highlightr"),
+                .product(name: "SwiftTerm", package: "SwiftTerm"),
             ],
             exclude: ["Resources"],  // Info.plist is for a future .app bundle
             swiftSettings: [

@@ -15,7 +15,8 @@ A fast, native text and code editor for macOS, inspired by Notepad++. Written in
 - **Document map** (minimap) beside each pane; click it to scroll, with TODO and FIXME ticks
 - **Line operations** like Notepad++'s: duplicate, delete, move, join, sort, reverse, remove duplicates or empty lines, and trim
 - **Change history** in the margin: orange for unsaved edits, green once saved
-- **Git**, read-only: branch and changed-line counts, marks in the margin, and a changes view. Slate never modifies a repository
+- **Git**: branch and changed-line counts, marks in the margin, a changes view, and a Git menu to commit chosen files, push, pull (fast-forward only), fetch, and switch or create branches
+- **Terminal panel** at the bottom of the window (⌃\`), opening in the current file's folder and running your own shell
 - **Macros**: record typing and editing keys, play them back many times, and save them
 - Go to Line, zoom, recent files, word wrap, line numbers, and light and dark mode
 - Careful with your files: keeps their encoding (UTF-8, UTF-8 with BOM, UTF-16, Windows-1252), line endings (LF, CRLF, CR, even mixed), symlinks and permissions, and warns if another app changed a file before you save
@@ -47,6 +48,8 @@ Requires macOS 14 Sonoma or later, on Apple silicon or Intel.
 | Zoom in / out / actual size | ⌘=, ⌘-, ⌘0 |
 | Show changes since last commit | ⇧⌘D |
 | Record macro, play macro | ⌃⌘R, ⌃⌘P |
+| Git commit, push, pull, switch branch | ⌥⌘K, ⇧⌥⌘P, ⇧⌥⌘L, ⇧⌥⌘B |
+| Terminal, terminal in file's folder | ⌃\`, ⌃⇧\` |
 | Next / previous tab | ⇧⌘] / ⇧⌘[ |
 
 ## Build from source
@@ -68,6 +71,7 @@ swift test
 
 - [Highlightr](https://github.com/raspu/Highlightr) and [highlight.js](https://highlightjs.org) for syntax highlighting
 - [Swift Collections](https://github.com/apple/swift-collections)
+- [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm) for the terminal panel
 - Inspired by [Notepad++](https://notepad-plus-plus.org). Slate is an independent project and isn't affiliated with Notepad++.
 
 ## License

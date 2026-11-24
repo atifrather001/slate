@@ -20,6 +20,9 @@ final class AppState: ObservableObject {
     @Published private(set) var wordWrap = true
     @Published private(set) var showsMinimap = true
     @Published private(set) var showsChangeHistory = true
+    @Published private(set) var showsTerminal = false
+    @Published private(set) var terminalTitle = ""
+    let terminal = TerminalController()
     @Published private(set) var fontSize: CGFloat = AppState.defaultFontSize
     @Published private(set) var recentFiles: [URL] = []
     @Published private(set) var isRecordingMacro = false
@@ -44,6 +47,7 @@ final class AppState: ObservableObject {
 
     init(store: UserDefaults? = nil) {
         self.store = store
+        defer { terminal.onTitleChange = { [weak self] title in self?.terminalTitle = title } }
         if let store {
             let size = store.double(forKey: Keys.fontSize)
             if size > 0 { fontSize = min(max(CGFloat(size), Self.fontSizes.lowerBound), Self.fontSizes.upperBound) }
@@ -245,7 +249,28 @@ final class AppState: ObservableObject {
     private func setFontSize(_ size: CGFloat) {
         fontSize = min(max(size, Self.fontSizes.lowerBound), Self.fontSizes.upperBound)
         sessions.values.forEach { $0.setFontSize(fontSize) }
+        terminal.setFontSize(fontSize)
         store?.set(Double(fontSize), forKey: Keys.fontSize)
+    }
+
+    // MARK: Terminal
+
+    /// The focused file's folder, or the home folder for an untitled tab.
+    var terminalFolder: URL {
+        focusedDocument?.fileURL?.deletingLastPathComponent()
+            ?? FileManager.default.homeDirectoryForCurrentUser
+    }
+
+    func toggleTerminal() {
+        showsTerminal.toggle()
+        if !showsTerminal, let textView = activeSession?.textView { textView.window?.makeFirstResponder(textView) }
+    }
+
+    /// Shows the terminal and moves its shell to the focused file's folder.
+    func openTerminalInFileFolder() {
+        let wasRunning = terminal.isRunning
+        showsTerminal = true
+        if wasRunning { terminal.changeDirectory(to: terminalFolder) }
     }
 
     func goTo(line: Int) {

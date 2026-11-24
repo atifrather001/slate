@@ -118,6 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
             return state.focusedDocumentID.flatMap { state.git[$0]?.committedText } != nil
         }
         if item.action == #selector(toggleChangeHistory) { item.state = state.showsChangeHistory ? .on : .off }
+        if item.action == #selector(toggleTerminal) { item.state = state.showsTerminal ? .on : .off }
         if item.action == #selector(toggleMinimap) { item.state = state.showsMinimap ? .on : .off }
         if item.action == #selector(toggleSplit) { item.state = state.isSplit ? .on : .off }
         if item.action == #selector(toggleSplitDirection) {
@@ -208,6 +209,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     @objc func toggleSplit() { state.toggleSplit() }
     @objc func toggleMinimap() { state.toggleMinimap() }
     @objc func showChanges() { state.showChanges() }
+    @objc func toggleTerminal() { state.toggleTerminal() }
+    @objc func openTerminalHere() { state.openTerminalInFileFolder() }
     @objc func gitCommit() { gitActions.commit() }
     @objc func gitPush() { gitActions.push() }
     @objc func gitPull() { gitActions.pull() }
