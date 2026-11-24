@@ -17,6 +17,29 @@ struct ContentView: View {
             Divider()
             StatusBar(state: state)
         }
+        // Files dropped outside the text, such as on the tab bar or status bar, open as tabs.
+        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+            openDropped(providers)
+            return true
+        }
+    }
+
+    private func openDropped(_ providers: [NSItemProvider]) {
+        var urls: [URL] = []
+        let group = DispatchGroup()
+        for provider in providers {
+            group.enter()
+            _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                DispatchQueue.main.async {
+                    if let url, url.isFileURL { urls.append(url) }
+                    group.leave()
+                }
+            }
+        }
+        group.notify(queue: .main) {
+            let files = urls.filter { !(((try? $0.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory) ?? false) }
+            if !files.isEmpty { state.openDroppedFiles?(files) }
+        }
     }
 
     @ViewBuilder private var editors: some View {

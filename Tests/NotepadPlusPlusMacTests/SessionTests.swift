@@ -164,3 +164,38 @@ final class UntitledNumberTests: XCTestCase {
         XCTAssertEqual(names(state), ["Untitled 1", "Untitled 2"])
     }
 }
+
+@MainActor
+final class DropTests: XCTestCase {
+    func testDroppedFinderFilesOpenAsTabs() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: folder.appendingPathComponent("sub"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let csv = folder.appendingPathComponent("data.csv"), txt = folder.appendingPathComponent("notes.txt")
+        try "a,b\n1,2\n".write(to: csv, atomically: true, encoding: .utf8)
+        try "hello".write(to: txt, atomically: true, encoding: .utf8)
+
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("SlateDropTest-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.writeObjects([csv as NSURL, txt as NSURL, folder.appendingPathComponent("sub") as NSURL])
+        XCTAssertEqual(EditorTextView.droppedFiles(on: pasteboard).map(\.lastPathComponent), ["data.csv", "notes.txt"])
+
+        let delegate = AppDelegate(store: nil)
+        let state = delegate.state
+        state.updateContent(for: state.activeDocumentID!, newContent: "keep me")
+        let textView = state.activeSession!.textView
+        XCTAssertTrue(textView.openDroppedFiles(from: pasteboard))
+        XCTAssertEqual(state.documents.values.map(\.displayName), ["Untitled 1", "data.csv", "notes.txt"])
+        XCTAssertEqual(state.documents.values.first?.content, "keep me", "no path pasted into the text")
+    }
+
+    func testPlainTextDragsStillGoToTheEditor() {
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name("SlateDropTest-\(UUID().uuidString)"))
+        defer { pasteboard.releaseGlobally() }
+        pasteboard.clearContents()
+        pasteboard.setString("some text", forType: .string)
+        let state = AppState()
+        XCTAssertFalse(state.activeSession!.textView.openDroppedFiles(from: pasteboard))
+    }
+}

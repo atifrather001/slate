@@ -9,6 +9,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     init(store: UserDefaults? = .standard) {
         state = AppState(store: store)
         super.init()
+        state.openDroppedFiles = { [weak self] files in
+            self?.files.open(files)
+            self?.showWindow()
+        }
     }
     private(set) lazy var files = FileActions(state: state)
     private var window: NSWindow?

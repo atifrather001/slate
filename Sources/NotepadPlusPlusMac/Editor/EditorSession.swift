@@ -5,6 +5,40 @@ final class EditorTextView: NSTextView {
     var focused: (() -> Void)?
     /// Sees typing and editing keys, for macro recording.
     var performed: ((MacroAction) -> Void)?
+    /// Files dragged in from Finder are opened as tabs instead of being pasted in as paths.
+    var filesDropped: (([URL]) -> Void)?
+
+    /// The files, not folders, on a pasteboard from Finder.
+    static func droppedFiles(on pasteboard: NSPasteboard) -> [URL] {
+        let urls = pasteboard.readObjects(forClasses: [NSURL.self],
+                                          options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
+        return urls.filter { url in
+            var folder: ObjCBool = false
+            return FileManager.default.fileExists(atPath: url.path, isDirectory: &folder) && !folder.boolValue
+        }
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if !Self.droppedFiles(on: sender.draggingPasteboard).isEmpty { return .copy }
+        return super.draggingEntered(sender)
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if !Self.droppedFiles(on: sender.draggingPasteboard).isEmpty { return .copy }
+        return super.draggingUpdated(sender)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        if openDroppedFiles(from: sender.draggingPasteboard) { return true }
+        return super.performDragOperation(sender)
+    }
+
+    func openDroppedFiles(from pasteboard: NSPasteboard) -> Bool {
+        let files = Self.droppedFiles(on: pasteboard)
+        guard !files.isEmpty, let filesDropped else { return false }
+        filesDropped(files)
+        return true
+    }
 
     private var commandDepth = 0
 
@@ -49,6 +83,7 @@ final class EditorSession: NSObject {
     var onSelect: ((NSRange) -> Void)?
     var onFocus: ((EditorPane) -> Void)?
     var onAction: ((MacroAction) -> Void)?
+    var onFilesDropped: (([URL]) -> Void)?
 
     var language: Language = .plainText {
         didSet { if language != oldValue { scheduleHighlight() } }
@@ -295,6 +330,7 @@ final class EditorPane: NSObject, NSTextViewDelegate {
         textView.delegate = self
         textView.appearanceChanged = { [weak session] in session?.scheduleHighlight() }
         textView.performed = { [weak session] action in session?.onAction?(action) }
+        textView.filesDropped = { [weak session] files in session?.onFilesDropped?(files) }
         textView.focused = { [weak self, weak session] in
             guard let self else { return }
             session?.paneDidFocus(self)

@@ -28,6 +28,8 @@ final class AppState: ObservableObject {
     private var isPlayingMacro = false
     @Published private(set) var git: [UUID: GitSnapshot] = [:]
     private var pendingDiffs: [UUID: DispatchWorkItem] = [:]
+    /// Opens files dropped from Finder, with an alert for any that can't be opened. Set by the app.
+    var openDroppedFiles: (([URL]) -> Void)?
 
     static let defaultFontSize: CGFloat = 13
     static let fontSizes: ClosedRange<CGFloat> = 8...48
@@ -109,6 +111,7 @@ final class AppState: ObservableObject {
             self?.documents[id]?.selectionRange = selection
         }
         session.onAction = { [weak self] action in self?.record(action) }
+        session.onFilesDropped = { [weak self] files in self?.openDroppedFiles?(files) }
         session.onFocus = { [weak self] pane in
             guard let self else { return }
             let split = pane.isSecondary && self.splitDocumentID == id
