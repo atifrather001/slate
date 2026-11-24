@@ -172,19 +172,30 @@ struct CommitView: View {
     let branch: String
     let changes: [GitChange]
     let finish: (Result?) -> Void
-    @State private var chosen: Set<String>
-    @State private var message = ""
+    // A model object rather than @State, which needs a compiler plugin the Command Line Tools lack.
+    @StateObject private var form: Form
+
+    final class Form: ObservableObject {
+        @Published var chosen: Set<String>
+        @Published var message = ""
+        init(chosen: Set<String>) { self.chosen = chosen }
+    }
 
     init(repositoryName: String, branch: String, changes: [GitChange], finish: @escaping (Result?) -> Void) {
         self.repositoryName = repositoryName
         self.branch = branch
         self.changes = changes
         self.finish = finish
-        _chosen = State(initialValue: Set(changes.map(\.id)))
+        _form = StateObject(wrappedValue: Form(chosen: Set(changes.map(\.id))))
+    }
+
+    private var chosen: Set<String> {
+        get { form.chosen }
+        nonmutating set { form.chosen = newValue }
     }
 
     private var canCommit: Bool {
-        !chosen.isEmpty && !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !chosen.isEmpty && !form.message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     var body: some View {
@@ -213,7 +224,7 @@ struct CommitView: View {
             }
             .frame(minHeight: 140)
             Text("Message")
-            TextEditor(text: $message)
+            TextEditor(text: $form.message)
                 .font(.body.monospaced())
                 .frame(minHeight: 80)
                 .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color(nsColor: .separatorColor)))
@@ -232,7 +243,7 @@ struct CommitView: View {
     }
 
     private func done(push: Bool) {
-        finish(Result(changes: changes.filter { chosen.contains($0.id) }, message: message, push: push))
+        finish(Result(changes: changes.filter { chosen.contains($0.id) }, message: form.message, push: push))
     }
 
     private func label(_ kind: GitChange.Kind) -> String {

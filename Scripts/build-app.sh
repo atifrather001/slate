@@ -16,6 +16,8 @@ app=".build/app/Slate.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/Licenses"
 cp "$bin/NotepadPlusPlusMac" "$app/Contents/MacOS/Slate"
+# Debug symbols aren't needed to run Slate and would nearly double its size.
+strip -S -x "$app/Contents/MacOS/Slate" 2>/dev/null
 cp Sources/NotepadPlusPlusMac/Resources/Info.plist "$app/Contents/Info.plist"
 cp Resources/AppIcon.icns "$app/Contents/Resources/"
 # Each package's resources, such as Highlightr's languages and themes.
