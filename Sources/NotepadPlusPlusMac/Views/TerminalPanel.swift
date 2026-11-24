@@ -38,6 +38,12 @@ struct TerminalPanel: View {
 private struct TerminalHost: NSViewRepresentable {
     let state: AppState
 
+    final class Coordinator {
+        var handledFocusSerial = -1
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     func makeNSView(context: Context) -> NSView {
         let container = NSView()
         container.clipsToBounds = true
@@ -46,11 +52,19 @@ private struct TerminalHost: NSViewRepresentable {
 
     func updateNSView(_ container: NSView, context: Context) {
         let terminal = state.terminal.start(in: state.terminalFolder, fontSize: state.fontSize)
-        guard terminal.superview !== container else { return }
-        terminal.removeFromSuperview()
-        terminal.frame = container.bounds
-        terminal.autoresizingMask = [.width, .height]
-        container.addSubview(terminal)
-        DispatchQueue.main.async { terminal.window?.makeFirstResponder(terminal) }
+        if terminal.superview !== container {
+            terminal.removeFromSuperview()
+            terminal.frame = container.bounds
+            terminal.autoresizingMask = [.width, .height]
+            container.addSubview(terminal)
+        }
+        // Each request to focus the terminal is acted on once, so clicking into the text afterwards sticks.
+        let request = state.focusRequest
+        guard request.target == .terminal, request.serial != context.coordinator.handledFocusSerial else { return }
+        context.coordinator.handledFocusSerial = request.serial
+        // After SwiftUI has finished moving views around, so nothing takes the keyboard back.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            terminal.window?.makeFirstResponder(terminal)
+        }
     }
 }

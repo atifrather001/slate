@@ -71,7 +71,7 @@ struct ContentView: View {
 
     @ViewBuilder private var mainEditor: some View {
         if let id = state.activeDocumentID, let session = state.session(for: id) {
-            EditorView(pane: session.primary, takesFocus: !state.splitFocused)
+            EditorView(pane: session.primary, takesFocus: !state.splitFocused && state.focusRequest.target == .editor)
                 .overlay(alignment: .top) { focusMark(!state.splitFocused) }
                 .frame(minWidth: 200, minHeight: 120)
         }
@@ -121,7 +121,7 @@ struct SplitPaneView: View {
                 Rectangle().fill(state.splitFocused ? Color.accentColor : Color.clear).frame(height: 2)
             }
             Divider()
-            EditorView(pane: pane, takesFocus: state.splitFocused)
+            EditorView(pane: pane, takesFocus: state.splitFocused && state.focusRequest.target == .editor)
         }
         .frame(minWidth: 200, minHeight: 120)
     }

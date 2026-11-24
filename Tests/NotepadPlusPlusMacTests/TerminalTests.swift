@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import XCTest
 @testable import NotepadPlusPlusMac
 
@@ -74,5 +75,37 @@ final class TerminalTests: XCTestCase {
         let item = try XCTUnwrap(view.items.first { $0.title == "Terminal" })
         XCTAssertEqual(item.keyEquivalent, "`")
         XCTAssertEqual(item.keyEquivalentModifierMask, .control)
+    }
+}
+
+@MainActor
+final class TerminalFocusTests: XCTestCase {
+    func testOpeningTheTerminalPutsTheKeyboardThere() async throws {
+        let state = AppState()
+        // Never ordered in, so nothing appears on screen.
+        let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 800, height: 500), styleMask: [.titled],
+                              backing: .buffered, defer: false)
+        window.contentView = NSHostingView(rootView: ContentView(state: state, files: FileActions(state: state)))
+        try await Task.sleep(nanoseconds: 800_000_000)
+        XCTAssertTrue(window.firstResponder === state.activeSession?.textView, "the text has the keyboard at first")
+
+        state.toggleTerminal()
+        try await Task.sleep(nanoseconds: 1_500_000_000)
+        XCTAssertTrue(window.firstResponder === state.terminal.view, "the terminal takes the keyboard when shown")
+
+        // Clicking back into the text keeps the keyboard there.
+        window.makeFirstResponder(state.activeSession?.textView)
+        state.zoom(by: 1)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertTrue(window.firstResponder === state.activeSession?.textView)
+
+        state.toggleTerminal()
+        try await Task.sleep(nanoseconds: 500_000_000)
+        XCTAssertTrue(window.firstResponder === state.activeSession?.textView, "hiding returns the keyboard to the text")
+
+        state.toggleTerminal()
+        try await Task.sleep(nanoseconds: 1_500_000_000)
+        XCTAssertTrue(window.firstResponder === state.terminal.view, "and showing it again moves it back")
+        state.terminal.stop()
     }
 }

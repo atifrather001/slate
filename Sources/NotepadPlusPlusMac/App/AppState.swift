@@ -21,6 +21,18 @@ final class AppState: ObservableObject {
     @Published private(set) var showsMinimap = true
     @Published private(set) var showsChangeHistory = true
     @Published private(set) var showsTerminal = false
+    /// Where the keyboard should go next. Each request has a new serial, so it's acted on once.
+    @Published private(set) var focusRequest = FocusRequest(target: .editor, serial: 0)
+
+    struct FocusRequest: Equatable {
+        enum Target { case editor, terminal }
+        var target: Target
+        var serial: Int
+    }
+
+    func requestFocus(_ target: FocusRequest.Target) {
+        focusRequest = FocusRequest(target: target, serial: focusRequest.serial + 1)
+    }
     @Published private(set) var terminalTitle = ""
     let terminal = TerminalController()
     @Published private(set) var fontSize: CGFloat = AppState.defaultFontSize
@@ -133,6 +145,7 @@ final class AppState: ObservableObject {
         activeDocumentID = id
         splitFocused = false
         findMessage = ""
+        requestFocus(.editor)
     }
 
     // MARK: Split
@@ -261,15 +274,22 @@ final class AppState: ObservableObject {
             ?? FileManager.default.homeDirectoryForCurrentUser
     }
 
+    /// Showing the terminal puts the keyboard in it; hiding it returns the keyboard to the text.
     func toggleTerminal() {
         showsTerminal.toggle()
-        if !showsTerminal, let textView = activeSession?.textView { textView.window?.makeFirstResponder(textView) }
+        if showsTerminal {
+            requestFocus(.terminal)
+        } else {
+            requestFocus(.editor)
+            if let textView = activeSession?.textView { textView.window?.makeFirstResponder(textView) }
+        }
     }
 
     /// Shows the terminal and moves its shell to the focused file's folder.
     func openTerminalInFileFolder() {
         let wasRunning = terminal.isRunning
         showsTerminal = true
+        requestFocus(.terminal)
         if wasRunning { terminal.changeDirectory(to: terminalFolder) }
     }
 
