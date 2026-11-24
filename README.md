@@ -76,4 +76,4 @@ swift test
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Slate is made by **NexaSecure Cloud and AI** and is free and open source under the MIT License. See [LICENSE](LICENSE).
