@@ -5,6 +5,10 @@ struct StatusBar: View {
 
     var body: some View {
         HStack(spacing: 16) {
+            if let activity = state.gitActivity {
+                ProgressView().controlSize(.mini)
+                Text(activity)
+            }
             if state.isRecordingMacro {
                 Label("Recording macro", systemImage: "record.circle")
                     .foregroundStyle(.red)

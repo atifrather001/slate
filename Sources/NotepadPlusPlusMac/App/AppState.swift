@@ -27,6 +27,8 @@ final class AppState: ObservableObject {
     @Published private(set) var savedMacros: [Macro] = []
     private var isPlayingMacro = false
     @Published private(set) var git: [UUID: GitSnapshot] = [:]
+    /// A Git command in progress, shown in the status bar.
+    @Published var gitActivity: String?
     private var pendingDiffs: [UUID: DispatchWorkItem] = [:]
     /// Opens files dropped from Finder, with an alert for any that can't be opened. Set by the app.
     var openDroppedFiles: (([URL]) -> Void)?
@@ -484,6 +486,36 @@ final class AppState: ObservableObject {
         guard let document = documents[id], let url = document.fileURL,
               let known = document.diskData, let current = try? Data(contentsOf: url) else { return false }
         return current != known
+    }
+
+    /// Rereads open files that changed on disk, as after a pull or branch switch. Tabs with unsaved
+    /// edits are left alone; their names are returned so the user can be told.
+    @discardableResult
+    func reloadChangedFiles(under folder: URL) -> [String] {
+        let root = canonical(folder).path + "/"
+        var skipped: [String] = []
+        for (id, document) in documents {
+            guard let url = document.fileURL, canonical(url).path.hasPrefix(root),
+                  let data = try? Data(contentsOf: url), data != document.diskData else { continue }
+            if document.isModified {
+                skipped.append(document.displayName)
+                continue
+            }
+            guard let file = try? TextFile(data: data), let session = sessions[id] else { continue }
+            var updated = document
+            updated.content = file.text
+            updated.savedContent = file.text
+            updated.openedContent = file.text
+            updated.diskData = data
+            updated.encoding = file.encoding
+            updated.savedEncoding = file.encoding
+            updated.lineEnding = file.lineEnding
+            updated.selectionRange = NSRange(location: 0, length: 0)
+            documents[id] = updated
+            session.load(file.text)
+        }
+        refreshAllGit()
+        return skipped
     }
 
     func save(_ id: UUID, to url: URL) throws {

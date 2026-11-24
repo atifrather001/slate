@@ -15,6 +15,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         }
     }
     private(set) lazy var files = FileActions(state: state)
+    private(set) lazy var gitActions = GitActions(state: state, files: files) { [weak self] in self?.window }
     private var window: NSWindow?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
@@ -108,6 +109,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
         }
         if item.action == #selector(performLineOperation(_:)) {
             return state.focusedDocument.map { !$0.isReadOnly } ?? false
+        }
+        if [#selector(gitCommit), #selector(gitPush), #selector(gitPull), #selector(gitFetch),
+            #selector(gitSwitchBranch)].contains(item.action) {
+            return state.gitActivity == nil && state.focusedDocumentID.flatMap { state.git[$0] } != nil
         }
         if item.action == #selector(showChanges) {
             return state.focusedDocumentID.flatMap { state.git[$0]?.committedText } != nil
@@ -203,6 +208,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     @objc func toggleSplit() { state.toggleSplit() }
     @objc func toggleMinimap() { state.toggleMinimap() }
     @objc func showChanges() { state.showChanges() }
+    @objc func gitCommit() { gitActions.commit() }
+    @objc func gitPush() { gitActions.push() }
+    @objc func gitPull() { gitActions.pull() }
+    @objc func gitFetch() { gitActions.fetch() }
+    @objc func gitSwitchBranch() { gitActions.switchBranch() }
     @objc func toggleChangeHistory() { state.toggleChangeHistory() }
     @objc func performLineOperation(_ sender: NSMenuItem) {
         if let name = sender.representedObject as? String, let operation = LineOperation(rawValue: name) {

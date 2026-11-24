@@ -102,7 +102,6 @@ enum MainMenu {
             command("Word Wrap", #selector(AppDelegate.toggleWordWrap), "z", .option),
             command("Document Map", #selector(AppDelegate.toggleMinimap), "m", [.command, .option]),
             command("Change History", #selector(AppDelegate.toggleChangeHistory)),
-            command("Show Changes Since Last Commit", #selector(AppDelegate.showChanges), "d", [.command, .shift]),
             .separator(),
             command("Split Editor", #selector(AppDelegate.toggleSplit), "\\"),
             command("Split Top and Bottom", #selector(AppDelegate.toggleSplitDirection)),
@@ -131,6 +130,16 @@ enum MainMenu {
             .separator(),
             dynamic(savedMacrosTitle),
             dynamic(deleteMacrosTitle),
+        ])
+        menu("Git", [
+            command("Commit…", #selector(AppDelegate.gitCommit), "k", [.command, .option]),
+            command("Push", #selector(AppDelegate.gitPush), "p", [.command, .option, .shift]),
+            command("Pull", #selector(AppDelegate.gitPull), "l", [.command, .option, .shift]),
+            command("Fetch", #selector(AppDelegate.gitFetch)),
+            .separator(),
+            command("Switch Branch…", #selector(AppDelegate.gitSwitchBranch), "b", [.command, .option, .shift]),
+            .separator(),
+            command("Show Changes Since Last Commit", #selector(AppDelegate.showChanges), "d", [.command, .shift]),
         ])
         menu("Window", [
             standard("Minimize", #selector(NSWindow.performMiniaturize(_:)), "m"),
