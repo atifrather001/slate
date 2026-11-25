@@ -200,6 +200,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMe
     @objc func saveAllFiles() { files.saveAll() }
     // In the second pane, ⌘W closes the split, not the tab.
     @objc func closeTab() {
+        // ⌘W in another window, such as About, closes that window, not a tab.
+        if let key = NSApp.keyWindow, key !== window {
+            key.performClose(nil)
+            return
+        }
         if state.isSplit && state.splitFocused {
             state.closeSplit()
         } else if let id = state.activeDocumentID {

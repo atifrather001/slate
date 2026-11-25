@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import XCTest
 @testable import NotepadPlusPlusMac
 
@@ -52,21 +53,51 @@ final class LanguageTests: XCTestCase {
 
 @MainActor
 final class AboutTests: XCTestCase {
-    func testAboutTextAndLinks() {
-        let credits = AboutSlate.creditsText()
-        let text = credits.string
-        XCTAssertTrue(text.hasPrefix("An app by NexaSecure Cloud and AI\n"))
-        XCTAssertTrue(text.contains("Free and open source under the MIT License."))
-        XCTAssertTrue(text.contains("SwiftTerm (MIT)"))
-        XCTAssertTrue(text.contains("not affiliated with Notepad++"))
-        var links: [String] = []
-        credits.enumerateAttribute(.link, in: NSRange(location: 0, length: credits.length)) { value, _, _ in
-            if let url = value as? URL { links.append(url.absoluteString) }
-        }
-        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate"))
-        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate/releases"))
-        XCTAssertTrue(links.contains("https://github.com/atifrather001/slate/issues"))
+    func testAboutDetails() throws {
+        XCTAssertEqual(AboutSlate.publisher, "NexaSecure Cloud and AI")
         XCTAssertTrue(AboutSlate.copyright.hasSuffix("NexaSecure Cloud and AI"))
+        let info = AboutSlate.versionInfo
+        XCTAssertTrue(info.hasPrefix("Slate "))
+        XCTAssertTrue(info.contains("SwiftTerm "))
+        XCTAssertTrue(info.contains("macOS "))
+        let licenses = AboutSlate.licensesText()
+        XCTAssertTrue(licenses.hasPrefix("Slate\n\nMIT License"))
+        XCTAssertTrue(licenses.contains("Copyright (c) 2026 NexaSecure Cloud and AI"))
+        XCTAssertEqual(AboutSlate.repository.absoluteString, "https://github.com/atifrather001/slate")
+        XCTAssertEqual(AboutSlate.issues.absoluteString, "https://github.com/atifrather001/slate/issues")
+    }
+
+    /// The versions shown in About must match what Slate is actually built with.
+    func testLibraryVersionsMatchPackageResolved() throws {
+        let resolved = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Package.resolved")
+        let json = try JSONSerialization.jsonObject(with: Data(contentsOf: resolved)) as? [String: Any]
+        let pins = try XCTUnwrap(json?["pins"] as? [[String: Any]])
+        var versions: [String: String] = [:]
+        for pin in pins {
+            if let identity = pin["identity"] as? String, let state = pin["state"] as? [String: Any],
+               let version = state["version"] as? String { versions[identity] = version }
+        }
+        let identities = ["SwiftTerm": "swiftterm", "Highlightr": "highlightr", "Swift Collections": "swift-collections"]
+        for library in AboutSlate.libraries {
+            XCTAssertEqual(versions[identities[library.name]!], library.version, library.name)
+        }
+    }
+
+    func testAboutWindowRenders() throws {
+        let host = NSHostingView(rootView: AboutView())
+        host.frame = NSRect(x: 0, y: 0, width: 460, height: 610)
+        host.layoutSubtreeIfNeeded()
+        XCTAssertEqual(host.fittingSize.width, 460)
+    }
+
+    func testLicenseTextMatchesTheRepository() throws {
+        let file = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("LICENSE")
+        let squash = { (s: String) in s.split(whereSeparator: \.isWhitespace).joined(separator: " ") }
+        XCTAssertEqual(squash(AboutSlate.slateLicense), squash(try String(contentsOf: file, encoding: .utf8)))
     }
 
     func testHelpMenu() throws {

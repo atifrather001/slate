@@ -29,6 +29,8 @@ for package in Highlightr swift-collections SwiftTerm; do
     install -m 644 "$license" "$app/Contents/Resources/Licenses/$package-${license:t}"
   done
 done
+# highlight.js ships inside Highlightr with its own license.
+install -m 644 .build/checkouts/Highlightr/src/assets/highlighter/LICENSE "$app/Contents/Resources/Licenses/highlight.js-LICENSE"
 
 # Signed for this Mac only. Sharing it needs an Apple Developer ID and notarization.
 codesign --force --sign - "$app"
